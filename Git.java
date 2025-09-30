@@ -1,3 +1,4 @@
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
 
@@ -48,6 +49,21 @@ public class Git {
                 e.printStackTrace();
             }
         });
+    }
+
+    public static void indexFile(Path file) throws IOException {
+        String sha1 = Hash.hashFile(file);
+        FileWriter fw = new FileWriter("git/index", true);
+        if (Files.size(Path.of("git/index")) != 0) {
+            fw.write("\n");
+        }
+        fw.write(sha1 + " " + file.toString());
+        fw.close();
+    }
+
+    public static void indexAndBlobFile(Path file) throws IOException {
+        indexFile(file);
+        BLOBfile(file);
     }
 
     
