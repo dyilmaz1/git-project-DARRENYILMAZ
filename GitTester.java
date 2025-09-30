@@ -1,10 +1,18 @@
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class GitTester {
     public static void main(String[] args) throws IOException {
-        
+        if (!Files.exists(Path.of("file.txt"))){
+            Files.createFile(Path.of("file.txt"));
+        }
+        cleanUp();
+        Git.init();
+        System.out.println("Is repo initialized: " + isRepositoryInitialized());
+        Git.BLOBfile(Path.of("file.txt"));
+        System.out.println("Is file.txt BLOBBED: " + isFileBLOBBED(Path.of("file.txt")));
     }
 
     public static void testInitializationAndCleanup() throws IOException {
@@ -49,7 +57,24 @@ public class GitTester {
         return true;
     }
 
+    public static boolean isFileBLOBBED(Path filePath) throws IOException{
+        return Files.exists(Path.of("git/objects/" + Hash.hashFile(filePath)));
+    }
+
+    public static boolean isFolderBLOBBED(Path folderPath) throws IOException {
+        return Files.list(folderPath).allMatch(p -> {
+            try {
+                return Files.isDirectory(p)
+                    || Files.exists(Path.of("git/objects/" + Hash.hashFile(p)));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
     public static void cleanUp() throws IOException {
+        if (!Files.exists(Path.of("git"))) {return;}
         Git.rmdir(Path.of("git"));
     }
+
 }

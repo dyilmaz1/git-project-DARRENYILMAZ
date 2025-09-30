@@ -10,3 +10,6 @@ The testing methodology in GitTester.java considers the possibility of errors wh
 
 Hash.java:
 Implemented the sha1 hash using messagedigest
+
+BLOBBING:
+To create a blob for a file, simply call the Git.BLOBfile on it.

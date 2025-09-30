@@ -30,9 +30,30 @@ public class Git {
             System.out.println("Git Repository Already Exists");
         }
     }
+
+    public static void BLOBfile(Path path) throws IOException {
+        String sha1 = Hash.hashFile(path);
+        Path BLOBPath = Files.createFile(Path.of("git/objects/" + sha1));
+        Files.write(BLOBPath, Files.readAllLines(path));
+    }
+
+    public static void BLOBFolder(Path path) throws IOException {
+        Files.list(path).forEach(p -> {
+            try {
+                if (!Files.isDirectory(p)) {
+                    BLOBfile(p);
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        });
+    }
+
     
 
     // Helper methods
+    
 
     public static void rmdir(Path path) throws IOException {
         if (Files.isDirectory(path)) {
