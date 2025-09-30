@@ -57,6 +57,7 @@ public class GitTester {
         return true;
     }
 
+    // HERE IS 2.3.1
     public static boolean isFileBLOBBED(Path filePath) throws IOException{
         return Files.exists(Path.of("git/objects/" + Hash.hashFile(filePath)));
     }
