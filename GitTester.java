@@ -26,7 +26,7 @@ public class GitTester {
 
         Files.delete(Path.of("file1.txt"));
         Files.delete(Path.of("file2.txt"));
-        cleanUp();
+        Git.resetFiles();
     }
 
     public static void testInitializationAndCleanup() throws IOException {

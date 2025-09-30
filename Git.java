@@ -69,6 +69,13 @@ public class Git {
     
 
     // Helper methods
+
+    public static void resetFiles() throws IOException {
+        cleardir(Path.of("git/objects"));
+        FileWriter fw = new FileWriter("git/index", false);
+        fw.write("");
+        fw.close();
+    }
     
 
     public static void rmdir(Path path) throws IOException {
@@ -81,6 +88,21 @@ public class Git {
                     e.printStackTrace();
                 }
             });
+        }
+        Files.delete(path);
+    }
+
+    public static void cleardir(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            Files.list(path).forEach(p -> {
+                try {
+                    rmdir(p);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            });
+            return;
         }
         Files.delete(path);
     }
