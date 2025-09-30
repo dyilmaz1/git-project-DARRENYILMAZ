@@ -5,13 +5,17 @@ import java.nio.file.Path;
 
 public class GitTester {
     public static void main(String[] args) throws IOException {
-        if (!Files.exists(Path.of("file.txt"))){
+        if (!Files.exists(Path.of("file.txt"))) {
             Files.createFile(Path.of("file.txt"));
+        }
+        if (!Files.exists(Path.of("file2.txt"))){
+            Files.createFile(Path.of("file2.txt"));
         }
         cleanUp();
         Git.init();
         System.out.println("Is repo initialized: " + isRepositoryInitialized());
-        Git.BLOBfile(Path.of("file.txt"));
+        Git.indexAndBlobFile(Path.of("file.txt"));
+        Git.indexAndBlobFile(Path.of("file2.txt"));
         System.out.println("Is file.txt BLOBBED: " + isFileBLOBBED(Path.of("file.txt")));
     }
 
