@@ -26,9 +26,25 @@ public class Git {
         }
         if (didSomething) {
             System.out.println("Git Repository Created");
-        }
-        else {
+        } else {
             System.out.println("Git Repository Already Exists");
         }
+    }
+    
+
+    // Helper methods
+
+    public static void rmdir(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            Files.list(path).forEach(p -> {
+                try {
+                    rmdir(p);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            });
+        }
+        Files.delete(path);
     }
 }
