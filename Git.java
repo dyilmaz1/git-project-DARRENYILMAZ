@@ -33,10 +33,28 @@ public class Git {
     }
 
     public static void BLOBfile(Path path) throws IOException {
+        if (path == null) {
+            throw new IllegalArgumentException("Path is null");
+        }
+
+        if (!Files.exists(path)) {
+            throw new IOException("File does not exist: " + path);
+        }
+
+        if (Files.isDirectory(path)) {
+            throw new IOException("Path is a directory, not a file: " + path);
+        }
         String sha1 = Hash.hashFile(path);
-        Path BLOBPath = Files.createFile(Path.of("git/objects/" + sha1));
-        Files.write(BLOBPath, Files.readAllLines(path));
+        Path blobPath = Path.of("git/objects/" + sha1);
+
+        if (Files.exists(blobPath)) {
+            throw new IOException("Blob already exists: " + blobPath);
+        }
+
+        Files.createFile(blobPath);
+        Files.write(blobPath, Files.readAllBytes(path));
     }
+
 
     public static void BLOBFolder(Path path) throws IOException {
         Files.list(path).forEach(p -> {
