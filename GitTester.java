@@ -6,11 +6,34 @@ import java.nio.file.Path;
 
 public class GitTester {
     public static void main(String[] args) throws IOException {
-        testIndexingAndBlobs();
+        cleanUp();
+        cleanUpTest();
     }
+    
+    public static void testTrees() throws IOException {
+        cleanUp();
+        cleanUpTest();
+        Git.init();
+        Files.createDirectory(Path.of("test"));
+        Files.createDirectory(Path.of("test/never"));
+        Files.createDirectory(Path.of("test/gonna"));
+        Files.createDirectory(Path.of("test/give"));
+        Files.createDirectory(Path.of("test/you"));
+        Files.createDirectory(Path.of("test/up"));
+        Files.createFile(Path.of("test/hello.txt"));
+        Files.createFile(Path.of("test/never/hello.txt"));
+        Files.createFile(Path.of("test/gonna/hello.txt"));
+        Files.createFile(Path.of("test/give/hello.txt"));
+        Files.createFile(Path.of("test/you/hello.txt"));
+        Files.createFile(Path.of("test/up/hello.txt"));
+
+        Git.generateTreeFile(Path.of("test"));
+    }
+
 
     public static void testIndexingAndBlobs() throws IOException {
         cleanUp();
+        cleanUpTest();
         Git.init();
         if (!Files.isDirectory(Path.of("test"))) {
             Files.createDirectory(Path.of("test"));
@@ -98,8 +121,17 @@ public class GitTester {
     }
 
     public static void cleanUp() throws IOException {
-        if (!Files.exists(Path.of("git"))) {return;}
+        if (!Files.exists(Path.of("git"))) {
+            return;
+        }
         Git.rmdir(Path.of("git"));
+    }
+    
+    public static void cleanUpTest() throws IOException {
+        if (!Files.exists(Path.of("test"))) {
+            return;
+        }
+        Git.rmdir(Path.of("test"));
     }
 
 }

@@ -74,8 +74,7 @@ public class Git {
     public static void indexFile(Path file) throws IOException {
         // make index string
         String sha1 = Hash.hashFile(file);
-        String filePath = file.toAbsolutePath().toString().replace(Path.of("").toAbsolutePath().toString()
-        .substring(0, Path.of("").toAbsolutePath().toString().lastIndexOf('/')), "").substring(1);  // Takes the absolute path of the file, and removes the absolute path of the current working directory.
+        String filePath = getFullPath(file);
         String toIndex = sha1 + " " + filePath;
 
         // skip if it has the same contents
@@ -109,6 +108,34 @@ public class Git {
         BLOBfile(file);
     }
 
+
+    public static String generateTreeFile(Path path) throws IOException {
+        return gtf(path).split(" ")[1];
+    }
+
+    private static String gtf(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            List<Path> contents = Files.list(path).collect(Collectors.toList());
+            StringBuilder tree = new StringBuilder();
+            for (Path p : contents) {
+                tree.append(gtf(p));
+                tree.append("\n");
+            }
+            tree.deleteCharAt(tree.length() - 1);
+            String sha1 = Hash.hashString(tree.toString());
+            Path blobPath = Path.of("git/objects/" + sha1);
+
+            Files.createFile(blobPath);
+            FileWriter fw = new FileWriter(blobPath.toString());
+            fw.write(tree.toString());
+            fw.close();
+            return "tree " + sha1 + " " + getFullPath(path);
+        }
+        else {
+            BLOBfile(path);
+            return "blob " + Hash.hashFile(path) + " " + getFullPath(path);
+        }
+    }
     
 
     // Helper methods
@@ -148,5 +175,11 @@ public class Git {
             return;
         }
         Files.delete(path);
+    }
+
+    public static String getFullPath(Path relativePath) {
+        return relativePath.toAbsolutePath().toString().replace(Path.of("").toAbsolutePath().toString()
+                .substring(0, Path.of("").toAbsolutePath().toString().lastIndexOf('/')), "").substring(1);
+         // Takes the absolute path of the file, and removes the absolute path of the current working directory.
     }
 }
