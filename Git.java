@@ -117,7 +117,7 @@ public class Git {
             workingList.sort(Comparator.comparingInt(d -> d.toString().split("/").length).reversed()
                     .thenComparing(d -> d.toString()));
             String leafMostTreePath = workingList.get(0).toString().substring(0,
-                    workingList.get(0).toString().lastIndexOf("/"));
+                    workingList.get(0).toString().lastIndexOf("/")+1);
             StringBuilder tree = new StringBuilder();
             for (int i = 0; i < workingList.size(); i++) {
                 if (workingList.get(i).toString().startsWith(leafMostTreePath)) {
@@ -138,7 +138,7 @@ public class Git {
                 fw.write(tree.toString());
             }
 
-            Directory treedir = new Directory("tree", sha1, leafMostTreePath);
+            Directory treedir = new Directory("tree", sha1, leafMostTreePath.substring(0, leafMostTreePath.length() - 1));
             workingList.add(treedir);
         }
     }
