@@ -31,7 +31,7 @@ public class Hash {
         return sha1(sb.toString());
     }
 
-    public static String hashString(String str) {
+    public static String hashStr(String str) {
         return sha1(str);
     }
 
