@@ -8,11 +8,35 @@ public class GitTester {
     public static void main(String[] args) throws IOException {
         cleanUp();
         cleanUpTest();
+        // testTreesIndex();
+    }
+
+    public static void testTreesIndex() throws IOException {
+        Git.init();
+        Files.createDirectory(Path.of("test"));
+        Files.createDirectory(Path.of("test/never"));
+        Files.createDirectory(Path.of("test/gonna"));
+        Files.createDirectory(Path.of("test/give"));
+        Files.createDirectory(Path.of("test/you"));
+        Files.createDirectory(Path.of("test/up"));
+        Files.createFile(Path.of("test/hello.txt"));
+        Git.indexFile(Path.of("test/hello.txt"));
+        Files.createFile(Path.of("test/never/hello.txt"));
+        Git.indexFile(Path.of("test/never/hello.txt"));
+        Files.createFile(Path.of("test/gonna/hello.txt"));
+        Git.indexFile(Path.of("test/gonna/hello.txt"));
+        Files.createFile(Path.of("test/give/hello.txt"));
+        Git.indexFile(Path.of("test/give/hello.txt"));
+        Files.createFile(Path.of("test/you/hello.txt"));
+        Git.indexFile(Path.of("test/you/hello.txt"));
+        Files.createFile(Path.of("test/up/hello.txt"));
+        Git.indexFile(Path.of("test/up/hello.txt"));
+
+
+        Git.gtfIndex();
     }
     
-    public static void testTrees() throws IOException {
-        cleanUp();
-        cleanUpTest();
+    public static void testTreesRecursive() throws IOException {
         Git.init();
         Files.createDirectory(Path.of("test"));
         Files.createDirectory(Path.of("test/never"));
@@ -27,33 +51,29 @@ public class GitTester {
         Files.createFile(Path.of("test/you/hello.txt"));
         Files.createFile(Path.of("test/up/hello.txt"));
 
-        Git.generateTreeFile(Path.of("test"));
+        Git.generateTreeFiles(Path.of("test"));
     }
 
 
     public static void testIndexingAndBlobs() throws IOException {
-        cleanUp();
-        cleanUpTest();
         Git.init();
-        if (!Files.isDirectory(Path.of("test"))) {
-            Files.createDirectory(Path.of("test"));
+        Files.createDirectory(Path.of("test"));
+        try (FileWriter fw1 = new FileWriter("test/file1.txt")) {
+            fw1.write("Hello World!");
         }
-        FileWriter fw1 = new FileWriter("test/file1.txt");
-        fw1.write("Hello World!");
-        fw1.close();
 
-        FileWriter fw2 = new FileWriter("test/file2.txt");
-        fw2.write("This is a Test");
-        fw2.close();
+        try (FileWriter fw2 = new FileWriter("test/file2.txt")) {
+            fw2.write("This is a Test");
+        }
 
-        Git.indexAndBlobFile(Path.of("test/file1.txt"));
-        Git.indexAndBlobFile(Path.of("test/file2.txt"));
+        Git.indexFile(Path.of("test/file1.txt"));
+        Git.indexFile(Path.of("test/file2.txt"));
 
-        FileWriter fw22 = new FileWriter("test/file2.txt");
-        fw22.write("This is different");
-        fw22.close();
+        try (FileWriter fw22 = new FileWriter("test/file2.txt")) {
+            fw22.write("This is different");
+        }
 
-        Git.indexAndBlobFile(Path.of("test/file2.txt"));
+        Git.indexFile(Path.of("test/file2.txt"));
 
 
         // Files.delete(Path.of("file1.txt"));
@@ -62,8 +82,6 @@ public class GitTester {
     }
 
     public static void testInitializationAndCleanup() throws IOException {
-        cleanUp();
-        Git.init();
         if (isRepositoryInitialized()){
             System.out.println("Repository is properly initialized");
         } else {

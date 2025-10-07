@@ -1,6 +1,8 @@
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,6 +60,7 @@ public class Git {
     }
 
 
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void BLOBFolder(Path path) throws IOException {
         Files.list(path).forEach(p -> {
             try {
@@ -65,7 +68,6 @@ public class Git {
                     BLOBfile(p);
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         });
@@ -101,15 +103,51 @@ public class Git {
         // add new
         fw.write(toIndex);
         fw.close();
-    }
-
-    public static void indexAndBlobFile(Path file) throws IOException {
-        indexFile(file);
         BLOBfile(file);
     }
 
+    public static void gtfIndex() throws IOException {
+        List<Directory> workingList = new ArrayList<>();
+        List<String> lines = Files.readAllLines(Path.of("git/index"));
+        for (String line : lines) {
+            Directory dir = new Directory("blob", line.split(" ")[0], line.split(" ")[1]);
+            workingList.add(dir);
+        }
+        while (workingList.size() > 1 || checkWorkingList(workingList)) {
+            workingList.sort(Comparator.comparingInt(d -> d.toString().split("/").length).reversed()
+                    .thenComparing(d -> d.toString()));
+            String leafMostTreePath = workingList.get(0).toString().substring(0,
+                    workingList.get(0).toString().lastIndexOf("/"));
+            StringBuilder tree = new StringBuilder();
+            for (int i = 0; i < workingList.size(); i++) {
+                if (workingList.get(i).toString().startsWith(leafMostTreePath)) {
+                    tree.append(workingList.get(i).toStringFull());
+                    tree.append("\n");
+                    workingList.remove(i);
+                    i--;
+                }
+            }
+            if (tree.length() > 0) {
+                tree.deleteCharAt(tree.length() - 1);
+            }
+            String sha1 = Hash.hashStr(tree.toString());
+            Path blobPath = Path.of("git/objects/" + sha1);
 
-    public static String generateTreeFile(Path path) throws IOException {
+            Files.createFile(blobPath);
+            try (FileWriter fw = new FileWriter(blobPath.toString())) {
+                fw.write(tree.toString());
+            }
+
+            Directory treedir = new Directory("tree", sha1, leafMostTreePath);
+            workingList.add(treedir);
+        }
+    }
+
+    private static boolean checkWorkingList(List<Directory> workingList){
+        return workingList.get(0).toString().contains("/");
+    }
+
+    public static String generateTreeFiles(Path path) throws IOException {
         return gtf(path).split(" ")[1];
     }
 
@@ -121,14 +159,16 @@ public class Git {
                 tree.append(gtf(p));
                 tree.append("\n");
             }
-            tree.deleteCharAt(tree.length() - 1);
-            String sha1 = Hash.hashString(tree.toString());
+            if (tree.length() > 0) {
+                tree.deleteCharAt(tree.length() - 1);
+            }
+            String sha1 = Hash.hashStr(tree.toString());
             Path blobPath = Path.of("git/objects/" + sha1);
 
             Files.createFile(blobPath);
-            FileWriter fw = new FileWriter(blobPath.toString());
-            fw.write(tree.toString());
-            fw.close();
+            try (FileWriter fw = new FileWriter(blobPath.toString())) {
+                fw.write(tree.toString());
+            }
             return "tree " + sha1 + " " + getFullPath(path);
         }
         else {
@@ -142,19 +182,19 @@ public class Git {
 
     public static void resetFiles() throws IOException {
         cleardir(Path.of("git/objects"));
-        FileWriter fw = new FileWriter("git/index", false);
-        fw.write("");
-        fw.close();
+        try (FileWriter fw = new FileWriter("git/index", false)) {
+            fw.write("");
+        }
     }
     
 
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void rmdir(Path path) throws IOException {
         if (Files.isDirectory(path)) {
             Files.list(path).forEach(p -> {
                 try {
                     rmdir(p);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             });
@@ -162,13 +202,13 @@ public class Git {
         Files.delete(path);
     }
 
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void cleardir(Path path) throws IOException {
         if (Files.isDirectory(path)) {
             Files.list(path).forEach(p -> {
                 try {
                     rmdir(p);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             });
@@ -180,6 +220,29 @@ public class Git {
     public static String getFullPath(Path relativePath) {
         return relativePath.toAbsolutePath().toString().replace(Path.of("").toAbsolutePath().toString()
                 .substring(0, Path.of("").toAbsolutePath().toString().lastIndexOf('/')), "").substring(1);
-         // Takes the absolute path of the file, and removes the absolute path of the current working directory.
+        // Takes the absolute path of the file, and removes the absolute path of the current working directory.
     }
+
+    private static class Directory {
+        String type;
+        String sha1;
+        String pathname;
+
+        public Directory(String type, String sha1, String pathname) {
+            this.type = type;
+            this.sha1 = sha1;
+            this.pathname = pathname;
+        }
+
+        @Override
+        public String toString() {
+            return pathname;
+        }
+
+        public String toStringFull() {
+            return type + " " + sha1 + " " + pathname;
+        }
+    }
+    
 }
+
