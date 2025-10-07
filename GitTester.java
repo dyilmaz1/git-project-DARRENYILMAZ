@@ -26,6 +26,12 @@ public class GitTester {
         Git.indexAndBlobFile(Path.of("test/file1.txt"));
         Git.indexAndBlobFile(Path.of("test/file2.txt"));
 
+        FileWriter fw22 = new FileWriter("test/file2.txt");
+        fw22.write("This is different");
+        fw22.close();
+
+        Git.indexAndBlobFile(Path.of("test/file2.txt"));
+
 
         // Files.delete(Path.of("file1.txt"));
         // Files.delete(Path.of("file2.txt"));

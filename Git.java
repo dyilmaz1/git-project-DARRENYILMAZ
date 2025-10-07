@@ -1,6 +1,8 @@
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Git {
     public static void main(String[] args) throws IOException {
@@ -48,7 +50,7 @@ public class Git {
         Path blobPath = Path.of("git/objects/" + sha1);
 
         if (Files.exists(blobPath)) {
-            throw new IOException("Blob already exists: " + blobPath);
+            return;
         }
 
         Files.createFile(blobPath);
@@ -70,12 +72,35 @@ public class Git {
     }
 
     public static void indexFile(Path file) throws IOException {
+        // make index string
         String sha1 = Hash.hashFile(file);
-        FileWriter fw = new FileWriter("git/index", true);
-        if (Files.size(Path.of("git/index")) != 0) {
-            fw.write("\n");
+        String filePath = file.toAbsolutePath().toString().replace(Path.of("").toAbsolutePath().toString()
+        .substring(0, Path.of("").toAbsolutePath().toString().lastIndexOf('/')), "").substring(1);  // Takes the absolute path of the file, and removes the absolute path of the current working directory.
+        String toIndex = sha1 + " " + filePath;
+
+        // skip if it has the same contents
+        if (Files.lines(Path.of("git/index")).anyMatch(p -> p.equals(toIndex))) {
+            return;
         }
-        fw.write(sha1 + " " + file.toAbsolutePath().toString().replace(Path.of("").toAbsolutePath().toString().substring(0, Path.of("").toAbsolutePath().toString().lastIndexOf('/')), "").substring(1)); // Takes the absolute path of the file, and removes the absolute path of the current working directory.
+
+        // remove old file if modified
+        List<String> lines = Files.readAllLines(Path.of("git/index"));
+        List<String> updated = lines.stream()
+                .filter(line -> !line.contains(" " + filePath))
+                .collect(Collectors.toList());
+        FileWriter erase = new FileWriter("git/index", false); // false = overwrite
+        erase.close();
+
+        FileWriter fw = new FileWriter("git/index", true);
+        for (String s : updated) {
+            fw.write(s);
+            fw.write('\n');
+        }
+
+        fw.flush();
+
+        // add new
+        fw.write(toIndex);
         fw.close();
     }
 
