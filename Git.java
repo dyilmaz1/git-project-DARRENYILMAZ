@@ -75,7 +75,7 @@ public class Git {
         if (Files.size(Path.of("git/index")) != 0) {
             fw.write("\n");
         }
-        fw.write(sha1 + " " + file.toString());
+        fw.write(sha1 + " " + file.toAbsolutePath().toString().replace(Path.of("").toAbsolutePath().toString(), "").substring(1)); // Takes the absolute path of the file, and removes the absolute path of the current working directory.
         fw.close();
     }
 
