@@ -25,8 +25,14 @@ public class Hash {
             sb.append(str);
             sb.append('\n');
         }
-        sb.deleteCharAt(sb.length() - 1);
+        if (sb.toString().endsWith("\n")) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
         return sha1(sb.toString());
+    }
+
+    public static String hashString(String str) {
+        return sha1(str);
     }
 
 }
