@@ -12,21 +12,30 @@ public class GitTester {
     public static void testIndexingAndBlobs() throws IOException {
         cleanUp();
         Git.init();
-        FileWriter fw1 = new FileWriter("file1.txt");
+        if (!Files.isDirectory(Path.of("test"))) {
+            Files.createDirectory(Path.of("test"));
+        }
+        FileWriter fw1 = new FileWriter("test/file1.txt");
         fw1.write("Hello World!");
         fw1.close();
 
-        FileWriter fw2 = new FileWriter("file2.txt");
+        FileWriter fw2 = new FileWriter("test/file2.txt");
         fw2.write("This is a Test");
         fw2.close();
 
-        Git.indexAndBlobFile(Path.of("file1.txt"));
-        Git.indexAndBlobFile(Path.of("file2.txt"));
+        Git.indexAndBlobFile(Path.of("test/file1.txt"));
+        Git.indexAndBlobFile(Path.of("test/file2.txt"));
+
+        FileWriter fw22 = new FileWriter("test/file2.txt");
+        fw22.write("This is different");
+        fw22.close();
+
+        Git.indexAndBlobFile(Path.of("test/file2.txt"));
 
 
-        Files.delete(Path.of("file1.txt"));
-        Files.delete(Path.of("file2.txt"));
-        Git.resetFiles();
+        // Files.delete(Path.of("file1.txt"));
+        // Files.delete(Path.of("file2.txt"));
+        // Git.resetFiles();
     }
 
     public static void testInitializationAndCleanup() throws IOException {
