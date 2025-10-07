@@ -143,7 +143,10 @@ public class Git {
         }
     }
 
-    private static boolean checkWorkingList(List<Directory> workingList){
+    private static boolean checkWorkingList(List<Directory> workingList) {
+        if (workingList.isEmpty()) {
+            return false;
+        }
         return workingList.get(0).toString().contains("/");
     }
 
