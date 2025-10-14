@@ -133,7 +133,7 @@ public class Git {
             if (tree.length() > 0) {
                 tree.deleteCharAt(tree.length() - 1);
             }
-            String sha1 = Hash.hashStr(tree.toString());
+            sha1 = Hash.hashStr(tree.toString());
 
             Path blobPath = Path.of("git/objects/" + sha1);
 

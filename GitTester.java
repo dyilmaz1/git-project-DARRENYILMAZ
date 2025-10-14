@@ -10,6 +10,12 @@ public class GitTester {
         // cleanUpTest();
         testTreesIndex();
         Git.makeCommit("mike", "hi");
+
+        GitWrapper gw = new GitWrapper();
+        // gw.add("myProgram/hello.txt");
+        // gw.add("myProgram/inner/world.txt");
+        // gw.commit("John Doe", "Initial commit");
+        // gw.checkout("1234567890");
     }
 
     public static void testTreesIndex() throws IOException {
