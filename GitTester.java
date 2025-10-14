@@ -8,7 +8,38 @@ public class GitTester {
     public static void main(String[] args) throws IOException {
         cleanUp();
         cleanUpTest();
+        testCommit();
         // testTreesIndex();
+    }
+
+    public static void testCommit() throws IOException {
+        Git.init();
+        Files.createDirectory(Path.of("test"));
+        Files.createDirectory(Path.of("test/never"));
+        Files.createDirectory(Path.of("test/gonna"));
+        Files.createDirectory(Path.of("test/give"));
+        Files.createDirectory(Path.of("test/you"));
+        Files.createDirectory(Path.of("test/up"));
+        Files.createFile(Path.of("test/hello.txt"));
+        Git.indexFile(Path.of("test/hello.txt"));
+
+        Git.commit("darren", "test1");
+
+        Files.createFile(Path.of("test/never/hello.txt"));
+        Git.indexFile(Path.of("test/never/hello.txt"));
+        Files.createFile(Path.of("test/gonna/hello.txt"));
+        Git.indexFile(Path.of("test/gonna/hello.txt"));
+        Files.createFile(Path.of("test/give/hello.txt"));
+        Git.indexFile(Path.of("test/give/hello.txt"));
+        Files.createFile(Path.of("test/you/hello.txt"));
+        Git.indexFile(Path.of("test/you/hello.txt"));
+        Files.createFile(Path.of("test/up/hello.txt"));
+        Git.indexFile(Path.of("test/up/hello.txt"));
+
+        Git.commit("darren", "test2");
+
+
+        
     }
 
     public static void testTreesIndex() throws IOException {

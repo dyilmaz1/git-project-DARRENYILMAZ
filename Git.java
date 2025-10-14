@@ -1,6 +1,7 @@
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -106,7 +107,8 @@ public class Git {
         BLOBfile(file);
     }
 
-    public static void gtfIndex() throws IOException {
+    public static String gtfIndex() throws IOException {
+        String rootName = "";
         List<Directory> workingList = new ArrayList<>();
         List<String> lines = Files.readAllLines(Path.of("git/index"));
         for (String line : lines) {
@@ -117,7 +119,7 @@ public class Git {
             workingList.sort(Comparator.comparingInt(d -> d.toString().split("/").length).reversed()
                     .thenComparing(d -> d.toString()));
             String leafMostTreePath = workingList.get(0).toString().substring(0,
-                    workingList.get(0).toString().lastIndexOf("/")+1);
+                    workingList.get(0).toString().lastIndexOf("/") + 1);
             StringBuilder tree = new StringBuilder();
             for (int i = 0; i < workingList.size(); i++) {
                 if (workingList.get(i).toString().startsWith(leafMostTreePath)) {
@@ -132,15 +134,18 @@ public class Git {
             }
             String sha1 = Hash.hashStr(tree.toString());
             Path blobPath = Path.of("git/objects/" + sha1);
-
+            rootName = sha1;
             Files.createFile(blobPath);
             try (FileWriter fw = new FileWriter(blobPath.toString())) {
                 fw.write(tree.toString());
             }
 
-            Directory treedir = new Directory("tree", sha1, leafMostTreePath.substring(0, leafMostTreePath.length() - 1));
+            Directory treedir = new Directory("tree", sha1,
+                    leafMostTreePath.substring(0, leafMostTreePath.length() - 1));
             workingList.add(treedir);
         }
+        
+        return rootName;
     }
 
     private static boolean checkWorkingList(List<Directory> workingList) {
@@ -173,11 +178,26 @@ public class Git {
                 fw.write(tree.toString());
             }
             return "tree " + sha1 + " " + getFullPath(path);
-        }
-        else {
+        } else {
             BLOBfile(path);
             return "blob " + Hash.hashFile(path) + " " + getFullPath(path);
         }
+    }
+    
+    public static void commit(String author, String message) throws IOException {
+        String treeHash = gtfIndex();
+        String parent = Files.readAllLines(Paths.get("git/HEAD")).isEmpty() ? "" : Files.readAllLines(Paths.get("git/HEAD")).get(0);
+        String dateTime = LocalDateTime.now().toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("tree: ").append(treeHash).append("\n");
+        sb.append("parent: ").append(parent).append("\n");
+        sb.append("author: ").append(author).append("\n");
+        sb.append("date: ").append(dateTime).append("\n");
+        sb.append("message: ").append(message);
+        String sha1 = Hash.hashStr(sb.toString());
+        Files.createFile(Path.of("git/objects/" + sha1));
+        Files.write(Path.of("git/objects/" + sha1), sb.toString().getBytes());
+        Files.write(Path.of("git/HEAD"), sha1.getBytes());
     }
     
 
