@@ -12,10 +12,20 @@ public class GitTester {
         Git.makeCommit("mike", "hi");
 
         GitWrapper gw = new GitWrapper();
-        // gw.add("myProgram/hello.txt");
-        // gw.add("myProgram/inner/world.txt");
-        // gw.commit("John Doe", "Initial commit");
-        // gw.checkout("1234567890");
+        gw.init();
+
+        java.nio.file.Files.createDirectories(java.nio.file.Path.of("myProgram/inner"));
+        if (!java.nio.file.Files.exists(java.nio.file.Path.of("myProgram/hello.txt"))) {
+            java.nio.file.Files.writeString(java.nio.file.Path.of("myProgram/hello.txt"), "hello");
+        }
+        if (!java.nio.file.Files.exists(java.nio.file.Path.of("myProgram/inner/world.txt"))) {
+            java.nio.file.Files.writeString(java.nio.file.Path.of("myProgram/inner/world.txt"), "world");
+        }
+        
+        gw.add("myProgram/hello.txt");
+        gw.add("myProgram/inner/world.txt");
+        gw.commit("John Doe", "Initial commit");
+        gw.checkout("1234567890");
     }
 
     public static void testTreesIndex() throws IOException {

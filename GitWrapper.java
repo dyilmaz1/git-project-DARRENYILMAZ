@@ -44,8 +44,10 @@ public class GitWrapper {
         try {
             Path commitPath = Path.of("git/objects", commitHash);
             if (!Files.exists(commitPath)){
-                throw new RuntimeException("commit not found");
+                String head = Files.readString(Path.of("git/HEAD")).trim();
+                commitPath = Path.of("git/objects", head);
             }
+
 
             String commitBody = Files.readString(commitPath);
             String[] lines = commitBody.split("\n");
