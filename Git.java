@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -120,7 +121,7 @@ public class Git {
             workingList.sort(Comparator.comparingInt(d -> d.toString().split("/").length).reversed()
                     .thenComparing(d -> d.toString()));
             String leafMostTreePath = workingList.get(0).toString().substring(0,
-                    workingList.get(0).toString().lastIndexOf("/")+1);
+                    workingList.get(0).toString().lastIndexOf("/") + 1);
             StringBuilder tree = new StringBuilder();
             for (int i = 0; i < workingList.size(); i++) {
                 if (workingList.get(i).toString().startsWith(leafMostTreePath)) {
@@ -185,8 +186,7 @@ public class Git {
             }
 
             return "tree " + sha1 + " " + getFullPath(path);
-        }
-        else {
+        } else {
             BLOBfile(path);
             return "blob " + Hash.hashFile(path) + " " + getFullPath(path);
         }
@@ -249,6 +249,23 @@ public class Git {
         }
     }
     
+    public static String commit(String author, String message) throws IOException {
+        String treeHash = gtfIndex();
+        String parent = Files.readAllLines(Paths.get("git/HEAD")).isEmpty() ? "" : Files.readAllLines(Paths.get("git/HEAD")).get(0);
+        String dateTime = LocalDateTime.now().toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("tree: ").append(treeHash).append("\n");
+        sb.append("parent: ").append(parent).append("\n");
+        sb.append("author: ").append(author).append("\n");
+        sb.append("date: ").append(dateTime).append("\n");
+        sb.append("message: ").append(message);
+        String sha1 = Hash.hashStr(sb.toString());
+        Files.createFile(Path.of("git/objects/" + sha1));
+        Files.write(Path.of("git/objects/" + sha1), sb.toString().getBytes());
+        Files.write(Path.of("git/HEAD"), sha1.getBytes());
+        return sha1;
+    }
+    
 
     // Helper methods
 
@@ -262,6 +279,9 @@ public class Git {
 
     @SuppressWarnings("CallToPrintStackTrace")
     public static void rmdir(Path path) throws IOException {
+        if (path.toString().endsWith(".java") || path.toString().contains("git") || path.toString().contains("README.md")) {
+            return;
+        }
         if (Files.isDirectory(path)) {
             Files.list(path).forEach(p -> {
                 try {
@@ -276,6 +296,9 @@ public class Git {
 
     @SuppressWarnings("CallToPrintStackTrace")
     public static void cleardir(Path path) throws IOException {
+        if (path.toString().endsWith(".java") || path.toString().contains("git") || path.toString().contains("README.md")) {
+            return;
+        }
         if (Files.isDirectory(path)) {
             Files.list(path).forEach(p -> {
                 try {
@@ -295,6 +318,10 @@ public class Git {
         // Takes the absolute path of the file, and removes the absolute path of the current working directory.
     }
 
+    public static String getRelativePath(Path fullPath) {
+        return fullPath.toString().replace(getFullPath(Path.of("")) + "/", "");
+    }
+
     private static class Directory {
         String type;
         String sha1;
@@ -312,8 +339,9 @@ public class Git {
         }
 
         public String toStringFull() {
-            return type + " " + sha1 + " " + pathname;
+            return type + " " + sha1 + " " + getRelativePath(Path.of(pathname));
         }
+        
     }
     
 }
