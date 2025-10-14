@@ -131,10 +131,11 @@ public class Git {
                 tree.deleteCharAt(tree.length() - 1);
             }
             String sha1 = Hash.hashStr(tree.toString());
+
             Path blobPath = Path.of("git/objects/" + sha1);
 
             if (!Files.exists(blobPath)) {
-                Files.createFile(blobPath); // also changed this to be safer in canse file alr exists
+                Files.createFile(blobPath); // updated to first ensure it doesn't already exist
                 try (FileWriter fw = new FileWriter(blobPath.toString())) {
                     fw.write(tree.toString());
                 }

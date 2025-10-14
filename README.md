@@ -13,3 +13,6 @@ Implemented the sha1 hash using messagedigest
 
 BLOBBING:
 To create a blob for a file, simply call the Git.BLOBfile on it.
+
+# Mike's Changes:
+Added existence checks to gtf(Path) and gtfIndex() before creating tree objects to prevent FileAlreadyExistsException.
