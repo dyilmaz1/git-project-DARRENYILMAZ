@@ -11,7 +11,7 @@ public class Hash {
             byte[] hashBytes = md.digest(input.getBytes());
             StringBuilder sb = new StringBuilder();
             for (byte b : hashBytes) {
-                sb.append(String.format("%02x", b));
+                sb.append(String.format("%02x", b)); //x means hexadecimal
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {

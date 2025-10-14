@@ -1,62 +1,34 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 public class GitWrapper {
 
-    /**
-     * Initializes a new Git repository.
-     * This method creates the necessary directory structure
-     * and initial files (index, HEAD) required for a Git repository.
-     * @throws IOException 
-     */
-    public void init() throws IOException {
-        Git.init();
-    };
-
-    /**
-     * Stages a file for the next commit.
-     * This method adds a file to the index file.
-     * If the file does not exist, it throws an IOException.
-     * If the file is a directory, it throws an IOException.
-     * If the file is already in the index, it does nothing.
-     * If the file is successfully staged, it creates a blob for the file.
-     * @param filePath The path to the file to be staged.
-     * @throws IOException 
-     */
-    public void add(String filePath) throws IOException {
-        Path p = Path.of(filePath);
-        if (!Files.exists(p) || Files.isDirectory(p)) {
-            throw new IOException();
+    public void init() {
+        try {
+            Git.init();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        Git.indexFile(p);
-    };
+    }
 
-    /**
-     * Creates a commit with the given author and message.
-     * It should capture the current state of the repository by building trees based on the index file,
-     * writing the tree to the objects directory,
-     * writing the commit to the objects directory,
-     * updating the HEAD file,
-     * and returning the commit hash.
-     * 
-     * The commit should be formatted as follows:
-     * tree: <tree_sha>
-     * parent: <parent_sha>
-     * author: <author>
-     * date: <date>
-     * message: <message>
-     *
-     * @param author  The name of the author making the commit.
-     * @param message The commit message describing the changes.
-     * @return The SHA1 hash of the new commit.
-     * @throws IOException 
-     */
-    public String commit(String author, String message) throws IOException {
-        // to-do: implement functionality here
-        return Git.commit(author, message);
-    };
+    public void add(String filePath) {
+        try {
+            Git.indexFile(Path.of(filePath));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String commit(String author, String message) {
+        Git.makeCommit(author, message);
+        try {
+            String head = Files.readString(Path.of("git/HEAD")).trim();
+            return head;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
      /**
      * EXTRA CREDIT:
@@ -67,43 +39,63 @@ public class GitWrapper {
      * all its children.
      *
      * @param commitHash The SHA1 hash of the commit to check out.
-     * @throws IOException 
      */
-     public void checkout(String commitHash) throws IOException {
-        Git.cleardir(Path.of(""));
-        if (Files.readAllLines(Path.of("git/Head")).isEmpty()) {
-            throw new IOException();
-        }
-        String checkout = Files.readAllLines(Path.of("git/Head")).get(0);
-        while (!checkout.isEmpty() && !checkout.equals(commitHash)) {
-            checkout = Files.readAllLines(Path.of("git/objects/" + checkout)).get(1).split(" ")[1];
-        }
-        if (!checkout.equals(commitHash)) {
-            throw new IOException();
-        }
+    public void checkout(String commitHash) {
+        try {
+            Path commitPath = Path.of("git/objects", commitHash);
+            if (!Files.exists(commitPath)){
+                String head = Files.readString(Path.of("git/HEAD")).trim();
+                commitPath = Path.of("git/objects", head);
+            }
 
-        reconstruct("git/objects/" + Files.readAllLines(Path.of("git/objects/" + checkout)).get(0).split(" ")[1]);
 
-    };
+            String commitBody = Files.readString(commitPath);
+            String[] lines = commitBody.split("\n");
+            if (lines.length == 0){
+                throw new RuntimeException("nothing committed bruh");
+            }
+            if (!lines[0].startsWith("tree: ")){
+                throw new RuntimeException("formatting is bad! start with 'tree:' ");
+            }
 
-    private void reconstruct(String tree) throws IOException {
-        List<String> lines = Files.readAllLines(Path.of(tree));
-        for (String file : lines) {
-            String type = file.split(" ")[0];
-            String hash = file.split(" ")[1];
-            String path = file.split(" ")[2];
-            make(type, hash, Path.of(path));
+            String rootTree = lines[0].substring("tree: ".length()).trim();
+            restoreTree(rootTree);
+
+            Files.writeString(Path.of("git/HEAD"), commitHash + "\n");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private void make(String type, String hash, Path path) throws IOException {
-        if (type.equals("blob")) {
-            Files.createFile(path);
-            Files.write(path, Files.readAllBytes(Path.of("git/objects/" + hash)));
+    private void restoreTree(String treeSha) throws IOException {
+        Path treePath = Path.of("git/objects", treeSha);
+        if (!Files.exists(treePath)){
+            throw new RuntimeException("tree not found: " + treeSha);
         }
-        else if (type.equals("tree")) {
-            Files.createDirectory(path);
-            reconstruct("git/objects/" + hash);
+
+        String[] lines = Files.readString(treePath).split("\n");
+        for (String line : lines){
+            if (!line.isEmpty()){
+                String[] parts = line.split(" ", 3);
+                if (parts.length >= 3){
+                    String type = parts[0];
+                    String sha = parts[1];
+                    Path target = Path.of(parts[2]);
+
+                    if (type.equals("tree")){
+                        Files.createDirectories(target);
+                        restoreTree(sha);
+                    }
+                    else if (type.equals("blob")){
+                        if (target.getParent() != null){
+                            Files.createDirectories(target.getParent());
+                        }
+                        Path blobPath = Path.of("git/objects", sha);
+                        byte[] data = Files.readAllBytes(blobPath);
+                        Files.write(target, data);
+                    }
+                }
+            }
         }
     }
 }

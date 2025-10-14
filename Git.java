@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
@@ -6,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Date;
 
 public class Git {
     public static void main(String[] args) throws IOException {
@@ -108,13 +110,13 @@ public class Git {
     }
 
     public static String gtfIndex() throws IOException {
-        String rootName = "";
         List<Directory> workingList = new ArrayList<>();
         List<String> lines = Files.readAllLines(Path.of("git/index"));
         for (String line : lines) {
             Directory dir = new Directory("blob", line.split(" ")[0], line.split(" ")[1]);
             workingList.add(dir);
         }
+        String sha1 = "";
         while (workingList.size() > 1 || checkWorkingList(workingList)) {
             workingList.sort(Comparator.comparingInt(d -> d.toString().split("/").length).reversed()
                     .thenComparing(d -> d.toString()));
@@ -132,20 +134,22 @@ public class Git {
             if (tree.length() > 0) {
                 tree.deleteCharAt(tree.length() - 1);
             }
-            String sha1 = Hash.hashStr(tree.toString());
+            sha1 = Hash.hashStr(tree.toString());
+
             Path blobPath = Path.of("git/objects/" + sha1);
-            rootName = sha1;
-            Files.createFile(blobPath);
-            try (FileWriter fw = new FileWriter(blobPath.toString())) {
-                fw.write(tree.toString());
+
+            if (!Files.exists(blobPath)) {
+                Files.createFile(blobPath); // updated to first ensure it doesn't already exist
+                try (FileWriter fw = new FileWriter(blobPath.toString())) {
+                    fw.write(tree.toString());
+                }
             }
 
-            Directory treedir = new Directory("tree", sha1,
-                    leafMostTreePath.substring(0, leafMostTreePath.length() - 1));
+
+            Directory treedir = new Directory("tree", sha1, leafMostTreePath.substring(0, leafMostTreePath.length() - 1));
             workingList.add(treedir);
         }
-        
-        return rootName;
+        return sha1;
     }
 
     private static boolean checkWorkingList(List<Directory> workingList) {
@@ -171,16 +175,77 @@ public class Git {
                 tree.deleteCharAt(tree.length() - 1);
             }
             String sha1 = Hash.hashStr(tree.toString());
+
             Path blobPath = Path.of("git/objects/" + sha1);
 
-            Files.createFile(blobPath);
-            try (FileWriter fw = new FileWriter(blobPath.toString())) {
-                fw.write(tree.toString());
+            if (!Files.exists(blobPath)) {
+                Files.createFile(blobPath); // also changed this to be safer in canse file alr exists
+                try (FileWriter fw = new FileWriter(blobPath.toString())) {
+                    fw.write(tree.toString());
+                }
             }
+
             return "tree " + sha1 + " " + getFullPath(path);
         } else {
             BLOBfile(path);
             return "blob " + Hash.hashFile(path) + " " + getFullPath(path);
+        }
+    }
+
+    public static void makeCommit(String author, String message){
+        File git = new File("git");
+        if (!git.exists()){
+            throw new RuntimeException("git doesnt exist");
+        }
+        File objects = new File(git, "objects");
+        if (!objects.exists()){
+            throw new RuntimeException("objects doesnt exist");
+        }
+        File HEAD = new File(git, "HEAD");
+        if (!HEAD.exists()){
+            throw new RuntimeException("HEAD doesnt exist");
+        }
+
+        StringBuilder contents = new StringBuilder();
+
+        String newHash = "";
+        try {
+            newHash = gtfIndex();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        contents.append("tree: " + newHash);
+
+        String oldCommit = "";
+        try{
+            oldCommit = java.nio.file.Files.readString(HEAD.toPath()).trim();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        contents.append("\nparent: " + oldCommit); // stuff
+
+        contents.append("\nauthor: " + author); // stuff
+        contents.append("\ndate: " + new Date().toString());
+        contents.append("\nmessage: " + message);
+        String commitSha = Hash.hashStr(contents.toString());        
+        try {
+            HEAD.createNewFile();
+            FileWriter headWriter = new FileWriter(HEAD);
+            headWriter.write(commitSha + "\n");
+            headWriter.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        File commitFile = new File(objects, commitSha);
+        FileWriter commitWriter;
+        try {
+            commitWriter = new FileWriter(commitFile);
+            commitWriter.write(contents.toString());
+            commitWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
     
