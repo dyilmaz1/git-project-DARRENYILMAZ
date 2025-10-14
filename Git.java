@@ -214,6 +214,9 @@ public class Git {
 
     @SuppressWarnings("CallToPrintStackTrace")
     public static void rmdir(Path path) throws IOException {
+        if (path.toString().endsWith(".java") || path.toString().contains("git") || path.toString().contains("README.md")) {
+            return;
+        }
         if (Files.isDirectory(path)) {
             Files.list(path).forEach(p -> {
                 try {
@@ -228,6 +231,9 @@ public class Git {
 
     @SuppressWarnings("CallToPrintStackTrace")
     public static void cleardir(Path path) throws IOException {
+        if (path.toString().endsWith(".java") || path.toString().contains("git") || path.toString().contains("README.md")) {
+            return;
+        }
         if (Files.isDirectory(path)) {
             Files.list(path).forEach(p -> {
                 try {

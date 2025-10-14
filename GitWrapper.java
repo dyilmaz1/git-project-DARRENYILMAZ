@@ -1,4 +1,3 @@
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -70,13 +69,17 @@ public class GitWrapper {
      * @param commitHash The SHA1 hash of the commit to check out.
      * @throws IOException 
      */
-    public void checkout(String commitHash) throws IOException {
+     public void checkout(String commitHash) throws IOException {
+        Git.cleardir(Path.of(""));
+        if (Files.readAllLines(Path.of("git/Head")).isEmpty()) {
+            throw new IOException();
+        }
         String checkout = Files.readAllLines(Path.of("git/Head")).get(0);
         while (!checkout.isEmpty() && !checkout.equals(commitHash)) {
             checkout = Files.readAllLines(Path.of("git/objects/" + checkout)).get(1).split(" ")[1];
         }
         if (!checkout.equals(commitHash)) {
-            throw new FileNotFoundException();
+            throw new IOException();
         }
 
         reconstruct("git/objects/" + Files.readAllLines(Path.of("git/objects/" + checkout)).get(0).split(" ")[1]);
