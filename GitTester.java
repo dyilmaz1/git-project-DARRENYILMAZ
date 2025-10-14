@@ -6,35 +6,42 @@ import java.nio.file.Path;
 
 public class GitTester {
     public static void main(String[] args) throws IOException {
-        cleanUp();
-        cleanUpTest();
-        // testTreesIndex();
+        // cleanUp();
+        // cleanUpTest();
+        testTreesIndex();
+        Git.makeCommit("mike", "hi");
     }
 
     public static void testTreesIndex() throws IOException {
         Git.init();
-        Files.createDirectory(Path.of("test"));
-        Files.createDirectory(Path.of("test/never"));
-        Files.createDirectory(Path.of("test/gonna"));
-        Files.createDirectory(Path.of("test/give"));
-        Files.createDirectory(Path.of("test/you"));
-        Files.createDirectory(Path.of("test/up"));
-        Files.createFile(Path.of("test/hello.txt"));
-        Git.indexFile(Path.of("test/hello.txt"));
-        Files.createFile(Path.of("test/never/hello.txt"));
-        Git.indexFile(Path.of("test/never/hello.txt"));
-        Files.createFile(Path.of("test/gonna/hello.txt"));
-        Git.indexFile(Path.of("test/gonna/hello.txt"));
-        Files.createFile(Path.of("test/give/hello.txt"));
-        Git.indexFile(Path.of("test/give/hello.txt"));
-        Files.createFile(Path.of("test/you/hello.txt"));
-        Git.indexFile(Path.of("test/you/hello.txt"));
-        Files.createFile(Path.of("test/up/hello.txt"));
-        Git.indexFile(Path.of("test/up/hello.txt"));
+        Files.createDirectories(Path.of("test"));
+        Files.createDirectories(Path.of("test/never"));
+        Files.createDirectories(Path.of("test/gonna"));
+        Files.createDirectories(Path.of("test/give"));
+        Files.createDirectories(Path.of("test/you"));
+        Files.createDirectories(Path.of("test/up"));
 
+        if (!Files.exists(Path.of("test/hello.txt"))) Files.createFile(Path.of("test/hello.txt"));
+        Git.indexFile(Path.of("test/hello.txt"));
+
+        if (!Files.exists(Path.of("test/never/hello.txt"))) Files.createFile(Path.of("test/never/hello.txt"));
+        Git.indexFile(Path.of("test/never/hello.txt"));
+
+        if (!Files.exists(Path.of("test/gonna/hello.txt"))) Files.createFile(Path.of("test/gonna/hello.txt"));
+        Git.indexFile(Path.of("test/gonna/hello.txt"));
+
+        if (!Files.exists(Path.of("test/give/hello.txt"))) Files.createFile(Path.of("test/give/hello.txt"));
+        Git.indexFile(Path.of("test/give/hello.txt"));
+
+        if (!Files.exists(Path.of("test/you/hello.txt"))) Files.createFile(Path.of("test/you/hello.txt"));
+        Git.indexFile(Path.of("test/you/hello.txt"));
+
+        if (!Files.exists(Path.of("test/up/hello.txt"))) Files.createFile(Path.of("test/up/hello.txt"));
+        Git.indexFile(Path.of("test/up/hello.txt"));
 
         Git.gtfIndex();
     }
+
     
     public static void testTreesRecursive() throws IOException {
         Git.init();
