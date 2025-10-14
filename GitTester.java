@@ -8,8 +8,41 @@ public class GitTester {
     public static void main(String[] args) throws IOException {
         cleanUp();
         cleanUpTest();
-        testCommit();
+        testCheckout();
         // testTreesIndex();
+    }
+
+    public static void testCheckout() throws IOException {
+        GitWrapper git = new GitWrapper();
+        git.init();
+        Files.createDirectory(Path.of("test"));
+        Files.createDirectory(Path.of("test/never"));
+        Files.createDirectory(Path.of("test/gonna"));
+        Files.createDirectory(Path.of("test/give"));
+        Files.createDirectory(Path.of("test/you"));
+        Files.createDirectory(Path.of("test/up"));
+        Files.createFile(Path.of("test/hello.txt"));
+        git.add("test/hello.txt");
+
+        String myCommit = git.commit("darren", "test1");
+
+        Files.createFile(Path.of("test/never/hello.txt"));
+        Files.write(Path.of("test/never/hello.txt"), "thinking about thinking about thinking".getBytes());
+        git.add("test/never/hello.txt");
+        Files.createFile(Path.of("test/gonna/hello.txt"));
+        git.add("test/gonna/hello.txt");
+        Files.createFile(Path.of("test/give/hello.txt"));
+        git.add("test/give/hello.txt");
+        Files.createFile(Path.of("test/you/hello.txt"));
+        git.add("test/you/hello.txt");
+        Files.createFile(Path.of("test/up/hello.txt"));
+        git.add("test/up/hello.txt");
+
+        git.commit("darren", "test2");
+
+        cleanUpTest();
+
+        git.checkout(myCommit);
     }
 
     public static void testCommit() throws IOException {

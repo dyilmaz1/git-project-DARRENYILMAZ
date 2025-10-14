@@ -184,7 +184,7 @@ public class Git {
         }
     }
     
-    public static void commit(String author, String message) throws IOException {
+    public static String commit(String author, String message) throws IOException {
         String treeHash = gtfIndex();
         String parent = Files.readAllLines(Paths.get("git/HEAD")).isEmpty() ? "" : Files.readAllLines(Paths.get("git/HEAD")).get(0);
         String dateTime = LocalDateTime.now().toString();
@@ -198,6 +198,7 @@ public class Git {
         Files.createFile(Path.of("git/objects/" + sha1));
         Files.write(Path.of("git/objects/" + sha1), sb.toString().getBytes());
         Files.write(Path.of("git/HEAD"), sha1.getBytes());
+        return sha1;
     }
     
 
@@ -246,6 +247,10 @@ public class Git {
         // Takes the absolute path of the file, and removes the absolute path of the current working directory.
     }
 
+    public static String getRelativePath(Path fullPath) {
+        return fullPath.toString().replace(getFullPath(Path.of("")) + "/", "");
+    }
+
     private static class Directory {
         String type;
         String sha1;
@@ -263,8 +268,9 @@ public class Git {
         }
 
         public String toStringFull() {
-            return type + " " + sha1 + " " + pathname;
+            return type + " " + sha1 + " " + getRelativePath(Path.of(pathname));
         }
+        
     }
     
 }
