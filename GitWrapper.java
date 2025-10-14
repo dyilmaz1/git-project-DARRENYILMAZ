@@ -70,7 +70,7 @@ public class GitWrapper {
      * @throws IOException 
      */
      public void checkout(String commitHash) throws IOException {
-        
+        Git.cleardir(Path.of(""));
         if (Files.readAllLines(Path.of("git/Head")).isEmpty()) {
             throw new IOException();
         }
