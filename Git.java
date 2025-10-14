@@ -133,9 +133,11 @@ public class Git {
             String sha1 = Hash.hashStr(tree.toString());
             Path blobPath = Path.of("git/objects/" + sha1);
 
-            Files.createFile(blobPath);
-            try (FileWriter fw = new FileWriter(blobPath.toString())) {
-                fw.write(tree.toString());
+            if (!Files.exists(blobPath)) {
+                Files.createFile(blobPath); // also changed this to be safer in canse file alr exists
+                try (FileWriter fw = new FileWriter(blobPath.toString())) {
+                    fw.write(tree.toString());
+                }
             }
 
             Directory treedir = new Directory("tree", sha1, leafMostTreePath.substring(0, leafMostTreePath.length() - 1));
@@ -168,10 +170,13 @@ public class Git {
             String sha1 = Hash.hashStr(tree.toString());
             Path blobPath = Path.of("git/objects/" + sha1);
 
-            Files.createFile(blobPath);
-            try (FileWriter fw = new FileWriter(blobPath.toString())) {
-                fw.write(tree.toString());
+            if (!Files.exists(blobPath)) {
+                Files.createFile(blobPath); // also changed this to be safer in canse file alr exists
+                try (FileWriter fw = new FileWriter(blobPath.toString())) {
+                    fw.write(tree.toString());
+                }
             }
+
             return "tree " + sha1 + " " + getFullPath(path);
         }
         else {
